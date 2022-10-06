@@ -32,12 +32,13 @@ setMethod("acquireMetadata", "CalciteHandler", function(project, path) {
 
 #' @import BiocFileCache 
 #' @importFrom utils URLencode
-#' @importFrom filelock unlock
+#' @importFrom filelock lock unlock
 .cache <- function(key, save) {
     cache <- remote.globals$cache.object
     encoded <- URLencode(key, reserved=TRUE)
 
-    lck <- .lock_cache(cache)
+    lockfile <- file.path(bfccache(cache), "zircon-LOCK")
+    lck <- lock(lockfile)
     on.exit({
         if (!is.null(lck)) {
             unlock(lck)
@@ -53,19 +54,20 @@ setMethod("acquireMetadata", "CalciteHandler", function(project, path) {
             hit <- hit[1,,drop=FALSE]
         }
         path <- hit$fpath
-
     } else {
         path <- bfcnew(cache, key)
         must.fire <- TRUE
     }
 
-    # Unlocking once all DB operations are finished, so that
-    # we can save in parallel across processes.
     unlock(lck)
     lck <- NULL
 
-    # Saving again if it doesn't exist, e.g., because the last 
-    # download attempt was interrupted.
+    # Acquiring a path lock so that processes don't use the downloaded file
+    # after it started but before it's finished.
+    path.lock <- paste0(path, "_zircon-LOCK")
+    plock <- lock(path.lock)
+    on.exit(unlock(plock), add=TRUE)
+
     if (must.fire || !file.exists(path)) {
         success <- FALSE
         on.exit({
@@ -87,25 +89,3 @@ setMethod("acquireMetadata", "CalciteHandler", function(project, path) {
         .cache
     }
 }
-
-#' @importFrom filelock lock
-.lock_cache <- function(cache) {
-    lockfile <- file.path(bfccache(cache), "zircon-LOCK")
-    lock(lockfile)
-}
-
-#' @importFrom tools R_user_dir
-.setup_github_identities <- function() {
-    dir <- R_user_dir("calcite")
-    token.path <- file.path(dir, "token.txt")
-
-    olda <- identityAvailable(function() TRUE)
-    oldh <- identityHeaders(function() list(Authorization=paste0("Bearer ", token)))
-
-    function() {
-        identityAvailable(olda)
-        identityHeaders(oldh)
-    }
-}
-
-
