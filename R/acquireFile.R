@@ -1,30 +1,21 @@
 remote.globals <- new.env()
-remote.globals$url <- zircon::example.url # TODO: switch to the calcite backend.
+remote.globals$url <- "https://calcite.aaron-lun.workers.dev"
 remote.globals$cache.object <- NULL
 remote.globals$cache.update <- FALSE
 remote.globals$github.token <- NULL
-
-#' @export    
-restURL <- function(url) {
-    prev <- remote.globals$url
-    if (missing(url)) {
-        prev
-    } else {
-        remote.globals$url <- url
-        invisible(prev)
-    }
-}
 
 #' @import methods
 setClass("CalciteHandler", slots=c(project="character", version="character"))
 
 #' @importFrom zircon getFile
+#' @importFrom alabaster.base acquireFile
 setMethod("acquireFile", "CalciteHandler", function(project, path) {
     id <- packID(project@project, path, project@version)
     getFile(id, url=restURL(), cache=.create_cache_function())
 })
 
 #' @importFrom zircon getFile
+#' @importFrom alabaster.base acquireMetadata
 setMethod("acquireMetadata", "CalciteHandler", function(project, path) {
     id <- packID(project@project, path, project@version)
     getFileMetadata(id, url=restURL(), cache=.create_cache_function())
