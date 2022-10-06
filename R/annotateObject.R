@@ -1,6 +1,6 @@
 #' @export
 #' @importFrom S4Vectors metadata<- metadata
-annotateObject <- function(x, title, description, maintainers, species, genome, sources) {
+annotateObject <- function(x, title, description, maintainers, species, genome, origin) {
     for (m in seq_along(maintainers)) {
         if (is.character(maintainers[[m]])) {
             frag <- as.person(m)
@@ -14,7 +14,7 @@ annotateObject <- function(x, title, description, maintainers, species, genome, 
         maintainers=maintainers,
         species=species,
         genome=genome,
-        sources=sources
+        origin=origin
     )
 
     setObjectAnnotation(x, meta)
@@ -26,7 +26,7 @@ objectAnnotation <- function(x) metadata(x)[[".internal"]][["calcite"]]
 
 #' @export
 #' @importFrom S4Vectors metadata<- metadata
-setObjectAnnotation <- function(x, annotation) {
+setAnnotation <- function(x, annotation) {
     meta <- metadata(x)
     if (!(".internal" %in% names(meta))) {
         meta[[".internal"]] <- list()        
