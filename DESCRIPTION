@@ -1,0 +1,23 @@
+Package: calcite
+Version: 0.98.0
+Date: 2022-09-30
+Title: ExperimentHub-like Demonstrator for ArtifactDB
+Description: 
+    Provides an interface to calcite, the ExperimentHub-like instance of ArtifactDB.
+    This aims to demonstrate how ArtifactDB can be easily adapted for custom use cases.
+Authors@R: person("Aaron", "Lun", role=c("aut", "cre"), email="infinite.monkeys.with.keyboards@gmail.com")
+License: MIT + file LICENSE
+Imports:
+    alabaster.base,
+    zircon,
+    filelock,
+    utils,
+    methods,
+    BiocFileCache
+Suggests:
+    knitr,
+    rmarkdown,
+    testthat,
+    BiocStyle
+RoxygenNote: 7.2.1
+VignetteBuilder: knitr
