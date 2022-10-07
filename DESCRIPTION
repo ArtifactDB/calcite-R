@@ -13,11 +13,13 @@ Imports:
     filelock,
     utils,
     methods,
-    BiocFileCache
+    BiocFileCache,
+    tools
 Suggests:
     knitr,
     rmarkdown,
     testthat,
-    BiocStyle
+    BiocStyle,
+    BiocManager
 RoxygenNote: 7.2.1
 VignetteBuilder: knitr
