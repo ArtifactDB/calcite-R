@@ -9,7 +9,8 @@ auth.globals$info <- NULL
 #' @param token String containing a GitHub personal access token.
 #' If missing, the user will be prompted to supply a token.
 #' If \code{NULL}, any existing tokens are cleared.
-#' @param cache Logical scalar indicating whether the token should be cached to file, or just in memory for the current session.
+#' @param cache Logical scalar indicating whether the token should be cached to file for re-use in other R sessions.
+#' If \code{FALSE}, the token is only kept in memory for the current session.
 #' @param prompt Logical scalar indicating whether the user should be prompted to supply token details if no cached token exists.
 #'
 #' @return 
@@ -73,8 +74,10 @@ TOKEN: ")
         name <- content(res)$login
     }
 
-    dir.create(dirname(token.path), showWarnings=FALSE)
-    writeLines(c(token, name, expiry), con=token.path)
+    dir.create(dirname(token.path), showWarnings=FALSE, recursive=TRUE)
+    if (cache) {
+        writeLines(c(token, name, expiry), con=token.path)
+    }
     vals <- list(token=token, name=name, expires=expiry)
     auth.globals$info <- vals
     invisible(vals)

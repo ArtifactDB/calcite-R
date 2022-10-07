@@ -14,7 +14,8 @@ accessTokenInfo(prompt = interactive())
 If missing, the user will be prompted to supply a token.
 If \code{NULL}, any existing tokens are cleared.}
 
-\item{cache}{Logical scalar indicating whether the token should be cached to file, or just in memory for the current session.}
+\item{cache}{Logical scalar indicating whether the token should be cached to file for re-use in other R sessions.
+If \code{FALSE}, the token is only kept in memory for the current session.}
 
 \item{prompt}{Logical scalar indicating whether the user should be prompted to supply token details if no cached token exists.}
 }
