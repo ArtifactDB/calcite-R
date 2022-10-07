@@ -15,24 +15,15 @@
 #' @author Aaron Lun
 #'
 #' @examples
-#' # Making an exciting DataFrame.
-#' library(S4Vectors)
-#' df <- DataFrame(X=1:10, Y=LETTERS[1:10], Z=factor(letters[1:10]))
-#' df$AA <- DataFrame(foo=runif(10), bar=rnorm(10))
+#' # Making an example DataFrame:
+#' df <- exampleObject()
+#' df
+#' str(objectAnnotation(df))
 #'
-#' df <- annotateObject(df,
-#'     title="FOO",
-#'     description="I am a data frame",
-#'     maintainers="LTLA <infinite.monkeys.with.keyboards@gmail.com>",
-#'     species=9606,
-#'     genome=list(list(id="hg38", source="UCSC")),
-#'     origin=list(list(source="PubMed", id="123456789"))
-#' )
-#'
-#' # Staging the DataFrame.
+#' # Saving it to a directory:
 #' tmp <- tempfile()
 #' dir.create(tmp)
-#' saveObject(df, tmp, "df1")
+#' saveObject(df, tmp, "my_first_df")
 #'
 #' list.files(tmp, recursive=TRUE)
 #'

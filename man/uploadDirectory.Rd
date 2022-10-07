@@ -42,8 +42,17 @@ Upload a staging directory to the calcite backend.
 The directory should contain objects saved with \code{\link{saveObject}}.
 }
 \examples{
-example(saveObject, echo=FALSE) # re-using this example.
+tmp <- tempfile()
+dir.create(tmp)
 
+# Saving multiple objects to a directory.
+df <- exampleObject()
+saveObject(df, tmp, "my_first_df")
+
+df2 <- exampleObject()
+saveObject(df, tmp, "a_second_df")
+
+# Uploading it to the backend (requires authentication):
 \dontrun{uploadDirectory(tmp, "FOO", "BAR", expires=1)}
 
 }
