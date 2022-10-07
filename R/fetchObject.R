@@ -20,7 +20,7 @@
 #'
 #' @examples
 #' cache.dir <- tempfile()
-#' id <- "FOO:df1@BAR" # Using the example generated in saveObject
+#' id <- exampleID()
 #'
 #' # First request downloads the resources:
 #' obj <- fetchObject(id, cache=cache.dir)

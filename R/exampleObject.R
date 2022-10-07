@@ -35,5 +35,5 @@ exampleObject <- function() {
 #' @export
 #' @rdname examples
 exampleID <- function() {
-    "test:df@v1"
+    "test:my_first_df@v1"
 }
