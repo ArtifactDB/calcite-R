@@ -31,7 +31,9 @@ setAccessToken <- function(token, cache=TRUE) {
     token.path <- .token_cache_path()
     if (!missing(token) && is.null(token)) {
         globals$auth.info <- NULL
-        unlink(token.path)
+        if (cache) { # don't write to disk if cache=FALSE.
+            unlink(token.path)
+        }
         return(invisible(NULL))
     }
 
