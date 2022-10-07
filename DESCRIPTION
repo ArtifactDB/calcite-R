@@ -14,7 +14,9 @@ Imports:
     utils,
     methods,
     BiocFileCache,
-    tools
+    tools,
+    stats,
+    jsonlite
 Suggests:
     knitr,
     rmarkdown,
