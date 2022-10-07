@@ -1,0 +1,162 @@
+---
+title: R client for the calcite demonstrator
+author:
+- name: Aaron Lun
+  email: infinite.monkeys.with.keyboards@gmail.com
+package: zircon
+date: "Revised: October 7, 2022"
+output:
+  BiocStyle::html_document
+vignette: >
+  %\VignetteIndexEntry{Using the calcite R client}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, echo=FALSE}
+library(BiocStyle)
+self <- Githubpkg("ArtifactDB/calcite-R", "calcite");
+knitr::opts_chunk$set(error=FALSE, warning=FALSE, message=FALSE)
+```
+
+# Introduction
+
+`r self` implements a simple R client for interacting with the **calcite** demonstrator API.
+**calcite** provides an ExperimentHub-like data store for Bioconductor objects based on the [schemas here](https://github.com/ArtifactDB/calcite-schemas).
+Its purpose is to demonstrate how the ArtifactDB framework can be easily adapted for other applications.
+
+# Fetching objects from the backend
+
+The `fetchObject()` function will load an R object from the **calcite** backend, given the object's identifier:
+
+```{r}
+library(calcite)
+(id <- exampleID())
+obj <- fetchObject(id)
+obj
+```
+
+We can extract the ExperimentHub-like metadata using `objectAnnotation()`:
+
+```{r}
+str(objectAnnotation(obj))
+```
+
+More complex objects can be loaded if the corresponding [**alabaster**](https://github.com/ArtifactDB/alabaster.base) packages are installed.
+For example, we can load [`SingleCellExperiment`](https://bioconductor.org/packages/SingleCellExperiment) objects if `r Githubpkg("ArtifactDB/alabaster.sce")` is installed.
+
+```r
+fetchObject("test:my_first_sce@v1")
+```
+
+```
+## class: SingleCellExperiment
+## dim: 20006 3005
+## metadata(1): .internal
+## assays(1): counts
+## rownames(20006): Tspan12 Tshz1 ... mt-Rnr1 mt-Nd4l
+## rowData names(1): featureType
+## colnames(3005): 1772071015_C02 1772071017_G12 ... 1772066098_A12
+##   1772058148_F03
+## colData names(10): tissue group # ... level1class level2class
+## reducedDimNames(0):
+## mainExpName: endogenous
+## altExpNames(2): ERCC repeat
+```
+
+# Saving objects to the backend
+
+Given some Bioconductor objects, we can annotate them with ExperimentHub-like metadata:
+
+```{r}
+library(S4Vectors)
+df1 <- DataFrame(A=runif(10), B=rnorm(10), row.names=LETTERS[1:10])
+df1 <- annotateObject(df1, 
+    title="FOO",
+    description="Ich bien ein data frame",
+    maintainers="Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>",
+    species=9606,
+    genome=list(list(id="hg38", source="UCSC")),
+    origin=list(list(source="PubMed", id="123456789"))
+)
+```
+
+Then we save them into a "staging directory":
+
+```{r}
+staging <- tempfile()
+dir.create(staging)
+saveObject(df1, staging, "df001")
+list.files(staging, recursive=TRUE)
+```
+
+Any name can be used for the objects, and multiple objects can be saved into the same directory.
+Objects can even be saved into subdirectories:
+
+```{r}
+df2 <- DataFrame(A=runif(10), B=rnorm(10), row.names=LETTERS[1:10])
+df2 <- annotateObject(df1, 
+    title="BAR",
+    description="Je suis une data frame",
+    maintainers=list(list(name="Darth Vader", email="vader@empire.gov")),
+    species=10090,
+    genome=list(list(id="GRCm38", source="Ensembl")),
+    origin=list(list(source="GEO", id="GSE123456"))
+)
+
+dir.create(file.path(staging, "variants"))
+saveObject(df2, staging, "variants/df002")
+list.files(staging, recursive=TRUE)
+```
+
+Once we're done with staging, we're ready to upload.
+We pick a project name and version and call the `uploadDirectory()` function.
+This will prompt us for a [GitHub personal access token](https://github.com/settings/tokens) to authenticate into the backend, if we haven't supplied one already.
+
+🚨🚨🚨 **ALERT!**
+For cost and security reasons, the demonstrator instance only allows a certain set of GitHub users to perform new uploads.
+If you're not on the [list](https://github.com/ArtifactDB/calcite-worker/master/tree/wrangler.toml), you'll have to ask someone to create a stub project for you before you can use `uploadDirectory()`.
+🚨🚨🚨
+
+```{r, eval=FALSE}
+# Setting an expiry date of 1 day in the future, to avoid having lots of
+# testing projects lying around in the data store.
+uploadDirectory(staging, 
+    project="test-vignette", 
+    version=as.character(Sys.Date()), # using the date as the version.
+    expires=1)
+```
+
+# Searching for objects
+
+🚧🚧🚧 **Coming soon** 🚧🚧🚧
+
+# Advanced usage
+
+The **calcite** API is just another ArtifactDB instance, so all methods in the `r Githubpkg("ArtifactDB/zircon-R")` package can be used.
+For example, we can directly fetch the metadata for individual components:
+
+```{r}
+library(zircon)
+meta <- getFileMetadata(exampleID(), url=restURL())
+str(meta$data_frame)
+```
+
+We can inspect the permissions for a project:
+
+```{r}
+getPermissions("test", url=restURL())
+```
+
+And we can pull down all metadata for a particular version of a project:
+
+```{r}
+v1.meta <- getProjectMetadata("test", version="v1", url=restURL())
+length(v1.meta)
+```
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```
