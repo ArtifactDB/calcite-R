@@ -67,6 +67,7 @@ saveObject <- function(x, dir, path) {
 #' @import methods
 setGeneric("calciteStageObject", function(x, dir, path, child=FALSE, ...) standardGeneric("calciteStageObject"))
 
+#' @import calcite.schemas
 #' @importFrom alabaster.base stageObject 
 setMethod("calciteStageObject", "ANY", function(x, dir, path, child=FALSE, ...) {
     meta <- stageObject(x, dir, path, child=child, ...)

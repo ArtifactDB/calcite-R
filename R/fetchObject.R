@@ -79,6 +79,7 @@ fetchObject <- function(id, cache=TRUE, force.update=FALSE) {
 memory <- new.env()
 memory$cache <- list()
 
+#' @import calcite.schemas
 #' @importFrom alabaster.base .loadObjectInternal
 calciteLoadObject <- function(info, project, ...) {
     obj <- .loadObjectInternal(info, project, ..., .locations="calcite.schemas", .memory=memory)

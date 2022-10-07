@@ -9,6 +9,7 @@ Authors@R: person("Aaron", "Lun", role=c("aut", "cre"), email="infinite.monkeys.
 License: MIT + file LICENSE
 Imports:
     alabaster.base,
+    calcite.schemas,
     zircon,
     filelock,
     utils,
