@@ -2,9 +2,15 @@
 % Please edit documentation in R/annotateObject.R
 \name{annotateObject}
 \alias{annotateObject}
+\alias{objectAnnotation}
+\alias{setAnnotation}
 \title{Add calcite annotation}
 \usage{
 annotateObject(x, title, description, maintainers, species, genome, origin)
+
+objectAnnotation(x)
+
+setAnnotation(x, annotation)
 }
 \arguments{
 \item{x}{An \linkS4class{Annotated} object.}

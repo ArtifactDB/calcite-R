@@ -57,6 +57,7 @@
 #'
 #' @export
 #' @importFrom S4Vectors metadata<- metadata
+#' @importFrom utils as.person
 annotateObject <- function(x, title, description, maintainers, species, genome, origin) {
     maintainers <- as.list(maintainers)
     for (m in seq_along(maintainers)) {
@@ -80,10 +81,12 @@ annotateObject <- function(x, title, description, maintainers, species, genome, 
 }
 
 #' @export
+#' @rdname annotateObject
 #' @importFrom S4Vectors metadata
 objectAnnotation <- function(x) metadata(x)[[".internal"]][["calcite"]]
 
 #' @export
+#' @rdname annotateObject
 #' @importFrom S4Vectors metadata<- metadata
 setAnnotation <- function(x, annotation) {
     meta <- metadata(x)

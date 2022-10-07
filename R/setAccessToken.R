@@ -57,7 +57,7 @@ TOKEN: ")
                 name <- content(res)$login
                 break
             }
-            token <- getPass("\nHmm... failed to verify this token with GitHub (status code ", out$status_code, "). Try again?\nTOKEN: ")
+            token <- getPass("\nHmm... failed to verify this token with GitHub (status code ", res$status_code, "). Try again?\nTOKEN: ")
         }
 
         if (nchar(token) == 0) {
@@ -67,7 +67,7 @@ TOKEN: ")
     } else if (!is.null(token)) {
         res <- GET("https://api.github.com/user", add_headers(Authorization=paste("Bearer ", token)))
         if (res$status_code >= 300) {
-            stop("failed to verify this token with GitHub (status code ", out$status_code, ")")
+            stop("failed to verify this token with GitHub (status code ", res$status_code, ")")
         }
         expiry <- .process_expiry(res)
         name <- content(res)$login
