@@ -1,6 +1,3 @@
-auth.globals <- new.env()
-auth.globals$info <- NULL
-
 #' Get or set the GitHub access token
 #'
 #' Pretty much as the title says.
@@ -33,7 +30,7 @@ auth.globals$info <- NULL
 setAccessToken <- function(token, cache=TRUE) {
     token.path <- .token_cache_path()
     if (!missing(token) && is.null(token)) {
-        auth.globals$info <- NULL
+        globals$auth.info <- NULL
         unlink(token.path)
         return(invisible(NULL))
     }
@@ -74,19 +71,19 @@ TOKEN: ")
         name <- content(res)$login
     }
 
-    dir.create(dirname(token.path), showWarnings=FALSE, recursive=TRUE)
     if (cache) {
+        dir.create(dirname(token.path), showWarnings=FALSE, recursive=TRUE)
         writeLines(c(token, name, expiry), con=token.path)
     }
     vals <- list(token=token, name=name, expires=expiry)
-    auth.globals$info <- vals
+    globals$auth.info <- vals
     invisible(vals)
 }
 
 #' @export
 #' @rdname setAccessToken
 accessTokenInfo <- function(prompt=interactive()) {
-    vals <- auth.globals$info
+    vals <- globals$auth.info
     token.path <- .token_cache_path()
 
     rerun <- FALSE
@@ -98,14 +95,14 @@ accessTokenInfo <- function(prompt=interactive()) {
             vals <- list(token = lines[1], name = lines[2], expires = as.double(lines[3]))
             if (vals$expires <= as.double(Sys.time())) {
                 unlink(token.path)
-                auth.globals$info <- NULL
+                globals$auth.info <- NULL
                 rerun <- TRUE
             }
         }
     } else {
         if (vals$expires <= as.double(Sys.time())) {
             unlink(token.path)
-            auth.globals$info <- NULL
+            globals$auth.info <- NULL
             rerun <- TRUE
         }
     }
@@ -132,9 +129,8 @@ accessTokenInfo <- function(prompt=interactive()) {
     }
 }
 
-#' @importFrom tools R_user_dir
 .token_cache_path <- function() {
-    dir <- R_user_dir("calcite")
+    dir <- .cache_directory()
     file.path(dir, "token.txt")
 }
 

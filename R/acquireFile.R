@@ -1,13 +1,7 @@
-remote.globals <- new.env()
-remote.globals$url <- "https://calcite.aaron-lun.workers.dev"
-remote.globals$cache.object <- NULL
-remote.globals$cache.update <- FALSE
-remote.globals$github.token <- NULL
-
 #' @import methods
 setClass("CalciteHandler", slots=c(project="character", version="character"))
 
-#' @importFrom zircon getFile
+#' @importFrom zircon getFileMetadata packID
 #' @importFrom alabaster.base acquireFile
 setMethod("acquireFile", "CalciteHandler", function(project, path) {
     id <- packID(project@project, path, project@version)
@@ -18,14 +12,14 @@ setMethod("acquireFile", "CalciteHandler", function(project, path) {
 #' @importFrom alabaster.base acquireMetadata
 setMethod("acquireMetadata", "CalciteHandler", function(project, path) {
     id <- packID(project@project, path, project@version)
-    getFileMetadata(id, url=restURL(), cache=.create_cache_function())
+    getFileMetadata(id, url=restURL(), cache=.create_cache_function(), follow.links=TRUE)
 })
 
 #' @import BiocFileCache 
 #' @importFrom utils URLencode
 #' @importFrom filelock lock unlock
 .cache <- function(key, save) {
-    cache <- remote.globals$cache.object
+    cache <- globals$cache.object
     encoded <- URLencode(key, reserved=TRUE)
 
     lockfile <- file.path(bfccache(cache), "zircon-LOCK")
@@ -44,7 +38,7 @@ setMethod("acquireMetadata", "CalciteHandler", function(project, path) {
             bfcremove(hit$rid[-1])
             hit <- hit[1,,drop=FALSE]
         }
-        path <- hit$fpath
+        path <- file.path(bfccache(cache), hit$rpath)
     } else {
         path <- bfcnew(cache, key)
         must.fire <- TRUE
@@ -59,7 +53,7 @@ setMethod("acquireMetadata", "CalciteHandler", function(project, path) {
     plock <- lock(path.lock)
     on.exit(unlock(plock), add=TRUE)
 
-    if (must.fire || !file.exists(path)) {
+    if (must.fire || !file.exists(path) || globals$cache.update) {
         success <- FALSE
         on.exit({
             if (!success) {
@@ -74,7 +68,7 @@ setMethod("acquireMetadata", "CalciteHandler", function(project, path) {
 }
 
 .create_cache_function <- function() {
-    if (is.null(remote.globals$cache.object)) {
+    if (is.null(globals$cache.object)) {
         NULL
     } else {
         .cache

@@ -19,11 +19,11 @@
 #' 
 #' @export    
 restURL <- function(url) {
-    prev <- remote.globals$url
+    prev <- globals$rest.url
     if (missing(url)) {
         prev
     } else {
-        remote.globals$url <- url
+        globals$rest.url <- url
         invisible(prev)
     }
 }
