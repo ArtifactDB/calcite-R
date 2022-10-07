@@ -73,7 +73,15 @@ fetchObject <- function(id, cache=TRUE, force.update=FALSE) {
     proj <- new("CalciteHandler", project=unpacked$project, version=unpacked$version)
     meta <- acquireMetadata(proj, unpacked$path)
 
-    obj <- calciteLoadObject(meta, proj)
+    calciteLoadObject(meta, proj)
+}
+
+memory <- new.env()
+memory$cache <- list()
+
+#' @importFrom alabaster.base .loadObjectInternal
+calciteLoadObject <- function(info, project, ...) {
+    obj <- .loadObjectInternal(info, project, ..., .locations="calcite.schemas", .memory=memory)
 
     if (is(obj, "Annotated")) {
         blessed <- c(
@@ -83,18 +91,11 @@ fetchObject <- function(id, cache=TRUE, force.update=FALSE) {
             "species",
             "genome",
             "origin",
+            "bioc_version",
             "_extra"
         )
-        obj <- setAnnotation(obj, meta[intersect(names(meta), blessed)])
+        obj <- setAnnotation(obj, info[intersect(names(info), blessed)])
     }
 
     obj
-}
-
-memory <- new.env()
-memory$cache <- list()
-
-#' @importFrom alabaster.base .loadObjectInternal
-calciteLoadObject <- function(info, project, ...) {
-    .loadObjectInternal(info, project, ..., .locations="calcite.schemas", .memory=memory)
 }
