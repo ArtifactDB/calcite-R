@@ -25,3 +25,70 @@ saveObject(sce, tmp, "my_first_sce")
 
 # Uploading it to the backend (requires authentication):
 uploadDirectory(tmp, "test", "v1")
+
+#################################################
+## Other uploads, for demonstration purposes. ###
+#################################################
+
+tmp <- tempfile()
+dir.create(tmp)
+
+library(airway)
+data(airway)
+metadata(airway) <- list()
+airway <- annotateObject(airway,
+    title="Airway RNA-seq experiment",
+    description="RNA-seq for airway smooth muscle cell lines before and after glucocorticoid treatment.",
+    maintainers="Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>",
+    species=9606,
+    genome=list(list(id="hg19", source="UCSC")),
+    origin=list(list(source="PubMed", id="24926665"), list(source="GEO", id="GSE52778"))
+)
+saveObject(airway, tmp, "airway")
+uploadDirectory(tmp, "airway", "1.16.0")
+
+# Now for some 10X demos:
+library(BiocFileCache)
+bfc <- BiocFileCache(ask=FALSE) 
+filtered.ball <- bfcrpath(bfc, "https://cf.10xgenomics.com/samples/spatial-exp/2.0.0/Visium_Mouse_Olfactory_Bulb/Visium_Mouse_Olfactory_Bulb_filtered_feature_bc_matrix.tar.gz")
+image.ball <- bfcrpath(bfc, "https://cf.10xgenomics.com/samples/spatial-exp/2.0.0/Visium_Mouse_Olfactory_Bulb/Visium_Mouse_Olfactory_Bulb_spatial.tar.gz")
+
+dir <- tempfile()
+odir <- file.path(dir, "outs")
+dir.create(odir, recursive=TRUE)
+untar(filtered.ball, exdir=odir)
+untar(image.ball, exdir=odir)
+
+spe <- read10xVisium(dir, type="sparse", images=c("lowres", "hires", "detected", "aligned"))
+spe <- annotateObject(spe,
+    title="Mouse Olfactory bulb Visium data",
+    description="Adult mouse olfactory bulb, used in the Visium protocol for spatial transcriptomics. This is one of 10X Genomics' demonstration datasets.",
+    maintainers="Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>",
+    species=10090,
+    genome=list(list(id="mm10", source="UCSC")),
+    origin=list(list(source="URI", id="https://www.10xgenomics.com/resources/datasets/adult-mouse-olfactory-bulb-1-standard-1"))
+)
+
+library(calcite)
+tmp <- tempfile()
+dir.create(tmp)
+dir.create(file.path(tmp, "visium"))
+saveObject(spe, tmp, "visium/olfactory")
+
+library(TENxPBMCData)
+dir.create(file.path(tmp, "rnaseq"))
+for (opt in c("pbmc3k", "pbmc4k", "pbmc8k")) {
+    sce <- TENxPBMCData(opt)
+    sce <- annotateObject(sce,
+        title="Human PBMC CellRanger Chromium data",
+        description="Human PBMCs, used in the 10X Genomics protocol for single-cell RNA-seq. This is one of 10X Genomics' demonstration datasets, pulled out of the TENxPBMCData package.",
+        maintainers="Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>",
+        species=9606,
+        genome=list(list(id="hg38", source="UCSC")),
+        origin=list(list(source="URI", id="https://bioconductor.org/packages/TENxPBMCData"))
+    )
+    assay(sce) <- as(assay(sce), "dgCMatrix")
+    saveObject(sce, tmp, paste0("rnaseq/", opt))
+}
+
+uploadDirectory(tmp, "tenx", "v1")
