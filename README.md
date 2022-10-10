@@ -3,7 +3,8 @@
 The **calcite** package implements an R client for interacting with the [**calcite** REST API](https://github.com/ArtifactDB/calcite-worker).
 The **calcite** system provides an ExperimentHub-like data store for Bioconductor objects based on the [schemas here](https://github.com/ArtifactDB/calcite-schemas).
 Its purpose is to demonstrate how the ArtifactDB framework can be easily adapted for other applications.
-To get started, we can install the dependencies:
+
+To get started, we can install the dependencies (or we can use the [Docker image](https://github.com/ArtifactDB/calcite-docker/pkgs/container/calcite-docker%2Fbuilder)):
 
 ```r
 devtools::install_github("ArtifactDB/alabaster.schemas")
