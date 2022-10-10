@@ -1,7 +1,8 @@
+github.env <- new.env()
+
 #' Get or set the GitHub access token
 #'
-#' Pretty much as the title says.
-#' calcite uses GitHub for user authentication.
+#' Pretty much as the title says; calcite uses GitHub personal access tokens for user authentication.
 #'
 #' @param token String containing a GitHub personal access token.
 #' If missing, the user will be prompted to supply a token.
@@ -23,112 +24,26 @@
 #' @examples
 #' \dontrun{setAccessToken()}
 #'
-#' accessTokenInfo(FALSE)
+#' accessTokenInfo(prompt=FALSE)
 #'
 #' @export
-#' @importFrom httr GET add_headers content
+#' @importFrom zircon setGitHubToken
 setAccessToken <- function(token, cache=TRUE) {
-    token.path <- .token_cache_path()
-    if (!missing(token) && is.null(token)) {
-        globals$auth.info <- NULL
-        if (cache) { # don't write to disk if cache=FALSE.
-            unlink(token.path)
-        }
-        return(invisible(NULL))
-    }
-
-    expiry <- NULL
-    name <- NULL
-    if (missing(token)) {
-        token <- getPass("Please generate a new Github personal access token.
-
-1. Go to https://github.com/settings/tokens.
-2. Click 'Generate new token'.
-3. Give it a name and (optionally) set the desired expiry time.
-4. Click 'Generate token'.
-5. Copy and paste the token string below.
-
-TOKEN: ")
-
-        while (nchar(token)) {
-            res <- GET("https://api.github.com/user", add_headers(Authorization=paste("Bearer ", token)))
-            if (res$status_code < 300) {
-                expiry <- .process_expiry(res)
-                name <- content(res)$login
-                break
-            }
-            token <- getPass("\nHmm... failed to verify this token with GitHub (status code ", res$status_code, "). Try again?\nTOKEN: ")
-        }
-
-        if (nchar(token) == 0) {
-            stop("empty token supplied")
-        }
-
-    } else if (!is.null(token)) {
-        res <- GET("https://api.github.com/user", add_headers(Authorization=paste("Bearer ", token)))
-        if (res$status_code >= 300) {
-            stop("failed to verify this token with GitHub (status code ", res$status_code, ")")
-        }
-        expiry <- .process_expiry(res)
-        name <- content(res)$login
-    }
-
-    if (cache) {
-        dir.create(dirname(token.path), showWarnings=FALSE, recursive=TRUE)
-        writeLines(c(token, name, expiry), con=token.path)
-    }
-    vals <- list(token=token, name=name, expires=expiry)
-    globals$auth.info <- vals
-    invisible(vals)
+    setGitHubToken(token, 
+        cache.env=github.env, 
+        cache.path=if (cache) .token_cache_path() else NULL
+    )
 }
 
 #' @export
 #' @rdname setAccessToken
+#' @importFrom zircon getGitHubTokenInfo
 accessTokenInfo <- function(prompt=interactive()) {
-    vals <- globals$auth.info
-    token.path <- .token_cache_path()
-
-    rerun <- FALSE
-    if (is.null(vals)) {
-        if (!file.exists(token.path)) {
-            rerun <- TRUE
-        } else {
-            lines <- readLines(token.path)
-            vals <- list(token = lines[1], name = lines[2], expires = as.double(lines[3]))
-            if (vals$expires <= as.double(Sys.time())) {
-                unlink(token.path)
-                globals$auth.info <- NULL
-                rerun <- TRUE
-            }
-        }
-    } else {
-        if (vals$expires <= as.double(Sys.time())) {
-            unlink(token.path)
-            globals$auth.info <- NULL
-            rerun <- TRUE
-        }
-    }
-
-    if (rerun) {
-        if (prompt) {
-            vals <- setAccessToken()
-        } else {
-            return(NULL)
-        }
-    }
-
-    vals
-}
-
-#' @importFrom httr headers
-.process_expiry <- function(res) {
-    expires <- headers(res)[["github-authentication-token-expiration"]]
-    if (!is.null(expires)) {
-        frags <- strsplit(expires, " ")[[1]]
-        as.double(as.POSIXct(paste(frags[1], frags[2]), tz=frags[3]))
-    } else {
-        Inf
-    }
+    getGitHubTokenInfo(
+        cache.env=github.env,
+        cache.path=.token_cache_path(),
+        prompt=prompt
+    )
 }
 
 .token_cache_path <- function() {
@@ -136,15 +51,10 @@ accessTokenInfo <- function(prompt=interactive()) {
     file.path(dir, "token.txt")
 }
 
-#' @importFrom getPass getPass
-#' @importFrom zircon identityAvailable identityHeaders
-#' @importFrom httr GET
-.setup_github_identities <- function() {
-    olda <- identityAvailable(function() !is.null(accessTokenInfo(prompt=FALSE)))
-    oldh <- identityHeaders(function() list(Authorization=paste0("Bearer ", accessTokenInfo()$token)))
-
-    function() {
-        identityAvailable(olda)
-        identityHeaders(oldh)
-    }
+#' @importFrom zircon useGitHubIdentities
+.setup_github_identities <- function(cache=TRUE) {
+    useGitHubIdentities(
+        cache.env=github.env, 
+        cache.path=if (cache) .token_cache_path() else NULL
+    )
 }

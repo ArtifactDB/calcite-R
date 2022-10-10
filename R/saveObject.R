@@ -34,24 +34,11 @@
 #' 
 #' @export
 #' @importFrom alabaster.base .altStageObject .writeMetadata .createRedirection
-#' @importFrom jsonlite fromJSON
 #' @importFrom zircon uploadProject
 saveObject <- function(x, dir, path) {
     olds <- .altStageObject(calciteStageObject)
     on.exit(.altStageObject(olds), add=TRUE)
     meta <- calciteStageObject(x, dir, path, child=FALSE)
-
-    # Check that we're not inside another object's subdirectories.
-    parent <- dirname(path)
-    while (parent != ".") {
-        candidates <- list.files(file.path(dir, parent), pattern="\\.json$")
-        for (can in candidates) {
-            if (!startsWith(fromJSON(file.path(dir, parent, can), simplifyVector=FALSE)[["$schema"]], "redirection/")) {
-                stop("cannot save an object inside another object's subdirectory at '", parent, "'")
-            }
-        }
-        parent <- dirname(parent)
-    }
 
     extras <- objectAnnotation(x)
     extras <- extras[setdiff(names(extras), "_extra")]

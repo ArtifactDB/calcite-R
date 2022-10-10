@@ -39,7 +39,10 @@
 #'
 #' @export
 #' @importFrom zircon uploadProject
+#' @importFrom alabaster.base checkValidDirectory
 uploadDirectory <- function(dir, project, version, owners=NULL, viewers=NULL, public=TRUE, expires=NULL, collapse.md5.duplicates=TRUE) {
+    checkValidDirectory(dir)
+
     fun <- .setup_github_identities()
     on.exit(fun())
 

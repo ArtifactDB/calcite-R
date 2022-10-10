@@ -17,10 +17,7 @@ Imports:
     BiocFileCache,
     tools,
     stats,
-    jsonlite,
-    S4Vectors,
-    getPass,
-    httr
+    S4Vectors
 Suggests:
     knitr,
     rmarkdown,

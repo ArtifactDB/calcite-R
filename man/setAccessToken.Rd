@@ -28,13 +28,12 @@ For \code{accessTokenInfo}, a list is returned containing the token details.
 If \code{prompt=FALSE} and no cached token is present, \code{NULL} is returned.
 }
 \description{
-Pretty much as the title says.
-calcite uses GitHub for user authentication.
+Pretty much as the title says; calcite uses GitHub personal access tokens for user authentication.
 }
 \examples{
 \dontrun{setAccessToken()}
 
-accessTokenInfo(FALSE)
+accessTokenInfo(prompt=FALSE)
 
 }
 \author{
