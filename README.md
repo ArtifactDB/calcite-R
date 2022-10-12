@@ -1,8 +1,8 @@
 # R client for the calcite demonstrator
 
-The **calcite** package implements an R client for interacting with the [**calcite** REST API](https://github.com/ArtifactDB/calcite-worker).
-The **calcite** system provides an ExperimentHub-like data store for Bioconductor objects based on the [schemas here](https://github.com/ArtifactDB/calcite-schemas).
-Its purpose is to demonstrate how the ArtifactDB framework can be easily adapted for other applications.
+This repository contains the **calcite** R package, which implements an R client for interacting with the [**calcite** REST API](https://github.com/ArtifactDB/calcite-worker).
+It is effectively a wrapper around the [**alabaster**](https://github.com/ArtifactDB/alabaster.base) framework for saving/loading Bioconductor objects,
+combined with functions from the [**zircon**](https://github.com/ArtifactDB/zircon-R) R client to pull/save data from the **calcite** API.
 
 To get started, we can install the dependencies (or we can use the [Docker image](https://github.com/ArtifactDB/calcite-docker/pkgs/container/calcite-docker%2Fbuilder)):
 
@@ -69,6 +69,54 @@ str(objectAnnotation(obj))
 ##   .. ..$ write_access: chr "owners"
 ##   .. ..$ owners      : chr "ArtifactDB-bot"
 ##   .. ..$ viewers     : list()
+```
+
+If the appropriate **alabaster** packages are installed, we can be more ambitious and pull down some more interesting objects:
+
+```r
+# Pulling down the Zeisel scRNA-seq dataset:
+fetchObject("test:my_first_sce@v1")
+## class: SingleCellExperiment
+## dim: 20006 3005
+## metadata(1): .internal
+## assays(1): counts
+## rownames(20006): Tspan12 Tshz1 ... mt-Rnr1 mt-Nd4l
+## rowData names(1): featureType
+## colnames(3005): 1772071015_C02 1772071017_G12 ... 1772066098_A12
+##   1772058148_F03
+## colData names(10): tissue group # ... level1class level2class
+## reducedDimNames(0):
+## mainExpName: endogenous
+## altExpNames(2): ERCC repeat
+
+# Pulling down the classic airway dataset:
+fetchObject("airway:airway@1.16.0")
+## class: RangedSummarizedExperiment
+## dim: 64102 8
+## metadata(1): .internal
+## assays(1): counts
+## rownames(64102): ENSG00000000003 ENSG00000000005 ... LRG_98 LRG_99
+## rowData names(0):
+## colnames(8): SRR1039508 SRR1039509 ... SRR1039520 SRR1039521
+## colData names(9): SampleName cell ... Sample BioSample
+
+# Pulling down some 10X Genomics Visium data:
+fetchObject("tenx:visium/olfactory@v1")
+## class: SpatialExperiment
+## dim: 32285 1185
+## metadata(1): .internal
+## assays(1): counts
+## rownames(32285): ENSMUSG00000051951 ENSMUSG00000089699 ...
+##   ENSMUSG00000095019 ENSMUSG00000095041
+## rowData names(1): symbol
+## colnames(1185): AAACAAGTATCTCCCA-1 AAACCGGGTAGGTACC-1 ...
+##   TTGTTTCACATCCAGG-1 TTGTTTCCATACAACT-1
+## colData names(4): in_tissue array_row array_col sample_id
+## reducedDimNames(0):
+## mainExpName: NULL
+## altExpNames(0):
+## spatialCoords names(2) : pxl_col_in_fullres pxl_row_in_fullres
+## imgData names(4): sample_id image_id data scaleFactor
 ```
 
 See the [user's guide](https://artifactdb.github.io/calcite-R/articles/userguide.html) for more details. 
