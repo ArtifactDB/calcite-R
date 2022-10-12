@@ -72,7 +72,7 @@
 <div class="section level1">
 <div class="page-header"><h1 id="r-client-for-the-calcite-demonstrator">R client for the calcite demonstrator<a class="anchor" aria-label="anchor" href="#r-client-for-the-calcite-demonstrator"></a>
 </h1></div>
-<p>The <strong>calcite</strong> package implements an R client for interacting with the <a href="https://github.com/ArtifactDB/calcite-worker" class="external-link"><strong>calcite</strong> REST API</a>. The <strong>calcite</strong> system provides an ExperimentHub-like data store for Bioconductor objects based on the <a href="https://github.com/ArtifactDB/calcite-schemas" class="external-link">schemas here</a>. Its purpose is to demonstrate how the ArtifactDB framework can be easily adapted for other applications.</p>
+<p>This repository contains the <strong>calcite</strong> R package, which implements an R client for interacting with the <a href="https://github.com/ArtifactDB/calcite-worker" class="external-link"><strong>calcite</strong> REST API</a>. It is effectively a wrapper around the <a href="https://github.com/ArtifactDB/alabaster.base" class="external-link"><strong>alabaster</strong></a> framework for saving/loading Bioconductor objects, combined with functions from the <a href="https://github.com/ArtifactDB/zircon-R" class="external-link"><strong>zircon</strong></a> R client to pull/save data from the <strong>calcite</strong> API.</p>
 <p>To get started, we can install the dependencies (or we can use the <a href="https://github.com/ArtifactDB/calcite-docker/pkgs/container/calcite-docker%2Fbuilder" class="external-link">Docker image</a>):</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"ArtifactDB/alabaster.schemas"</span><span class="op">)</span></span>
@@ -133,6 +133,51 @@
 <span><span class="co">##   .. ..$ write_access: chr "owners"</span></span>
 <span><span class="co">##   .. ..$ owners      : chr "ArtifactDB-bot"</span></span>
 <span><span class="co">##   .. ..$ viewers     : list()</span></span></code></pre></div>
+<p>If the appropriate <strong>alabaster</strong> packages are installed, we can be more ambitious and pull down some more interesting objects:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Pulling down the Zeisel scRNA-seq dataset:</span></span>
+<span><span class="fu"><a href="reference/fetchObject.html">fetchObject</a></span><span class="op">(</span><span class="st">"test:my_first_sce@v1"</span><span class="op">)</span></span>
+<span><span class="co">## class: SingleCellExperiment</span></span>
+<span><span class="co">## dim: 20006 3005</span></span>
+<span><span class="co">## metadata(1): .internal</span></span>
+<span><span class="co">## assays(1): counts</span></span>
+<span><span class="co">## rownames(20006): Tspan12 Tshz1 ... mt-Rnr1 mt-Nd4l</span></span>
+<span><span class="co">## rowData names(1): featureType</span></span>
+<span><span class="co">## colnames(3005): 1772071015_C02 1772071017_G12 ... 1772066098_A12</span></span>
+<span><span class="co">##   1772058148_F03</span></span>
+<span><span class="co">## colData names(10): tissue group # ... level1class level2class</span></span>
+<span><span class="co">## reducedDimNames(0):</span></span>
+<span><span class="co">## mainExpName: endogenous</span></span>
+<span><span class="co">## altExpNames(2): ERCC repeat</span></span>
+<span></span>
+<span><span class="co"># Pulling down the classic airway dataset:</span></span>
+<span><span class="fu"><a href="reference/fetchObject.html">fetchObject</a></span><span class="op">(</span><span class="st">"airway:airway@1.16.0"</span><span class="op">)</span></span>
+<span><span class="co">## class: RangedSummarizedExperiment</span></span>
+<span><span class="co">## dim: 64102 8</span></span>
+<span><span class="co">## metadata(1): .internal</span></span>
+<span><span class="co">## assays(1): counts</span></span>
+<span><span class="co">## rownames(64102): ENSG00000000003 ENSG00000000005 ... LRG_98 LRG_99</span></span>
+<span><span class="co">## rowData names(0):</span></span>
+<span><span class="co">## colnames(8): SRR1039508 SRR1039509 ... SRR1039520 SRR1039521</span></span>
+<span><span class="co">## colData names(9): SampleName cell ... Sample BioSample</span></span>
+<span></span>
+<span><span class="co"># Pulling down some 10X Genomics Visium data:</span></span>
+<span><span class="fu"><a href="reference/fetchObject.html">fetchObject</a></span><span class="op">(</span><span class="st">"tenx:visium/olfactory@v1"</span><span class="op">)</span></span>
+<span><span class="co">## class: SpatialExperiment</span></span>
+<span><span class="co">## dim: 32285 1185</span></span>
+<span><span class="co">## metadata(1): .internal</span></span>
+<span><span class="co">## assays(1): counts</span></span>
+<span><span class="co">## rownames(32285): ENSMUSG00000051951 ENSMUSG00000089699 ...</span></span>
+<span><span class="co">##   ENSMUSG00000095019 ENSMUSG00000095041</span></span>
+<span><span class="co">## rowData names(1): symbol</span></span>
+<span><span class="co">## colnames(1185): AAACAAGTATCTCCCA-1 AAACCGGGTAGGTACC-1 ...</span></span>
+<span><span class="co">##   TTGTTTCACATCCAGG-1 TTGTTTCCATACAACT-1</span></span>
+<span><span class="co">## colData names(4): in_tissue array_row array_col sample_id</span></span>
+<span><span class="co">## reducedDimNames(0):</span></span>
+<span><span class="co">## mainExpName: NULL</span></span>
+<span><span class="co">## altExpNames(0):</span></span>
+<span><span class="co">## spatialCoords names(2) : pxl_col_in_fullres pxl_row_in_fullres</span></span>
+<span><span class="co">## imgData names(4): sample_id image_id data scaleFactor</span></span></code></pre></div>
 <p>See the <a href="https://artifactdb.github.io/calcite-R/articles/userguide.html" class="external-link">user’s guide</a> for more details.</p>
 </div>
   </div>
