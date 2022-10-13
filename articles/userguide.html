@@ -236,6 +236,81 @@ can use <code><a href="../reference/uploadDirectory.html">uploadDirectory()</a><
 <span>    expires<span class="op">=</span><span class="fl">1</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="delayedarray-wrappers-for-calcite">
+<code>DelayedArray</code> wrappers for calcite<a class="anchor" aria-label="anchor" href="#delayedarray-wrappers-for-calcite"></a>
+</h2>
+<p>For arrays, <em><a href="https://github.com/ArtifactDB/calcite-R" class="external-link">calcite</a></em> offers
+some special behavior during loading:</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fetchObject.html">fetchObject</a></span><span class="op">(</span><span class="st">"test:my_first_sce/assay-1/matrix.h5@v1"</span><span class="op">)</span></span>
+<span><span class="va">mat</span></span></code></pre></div>
+<pre><code><span><span class="co">## &lt;20006 x 3005&gt; sparse matrix of class CalciteMatrix and type "integer":</span></span>
+<span><span class="co">##          1772071015_C02 1772071017_G12 ... 1772066098_A12 1772058148_F03</span></span>
+<span><span class="co">##  Tspan12              0              0   .              0              1</span></span>
+<span><span class="co">##    Tshz1              3              1   .              0              1</span></span>
+<span><span class="co">##   Fnbp1l              3              1   .              0              0</span></span>
+<span><span class="co">## Adamts15              0              0   .              0              0</span></span>
+<span><span class="co">##   Cldn12              1              1   .              0              0</span></span>
+<span><span class="co">##      ...              .              .   .              .              .</span></span>
+<span><span class="co">##   mt-Co2             65             97   .             29            120</span></span>
+<span><span class="co">##   mt-Co1             75            111   .             20            143</span></span>
+<span><span class="co">##  mt-Rnr2            158            326   .             36            359</span></span>
+<span><span class="co">##  mt-Rnr1             31             88   .             12             52</span></span>
+<span><span class="co">##  mt-Nd4l             13             14   .              3             13</span></span></code></pre>
+<p>The <code>CalciteArray</code> object is a <a href="https://bioconductor.org/packages/DelayedArray" class="external-link"><code>DelayedArray</code></a>
+subclass that remembers its ArtifactDB identifier. This provides some
+optimization opportunities during the save/upload of the unmodified
+array. For example, let’s wrap <code>mat</code> inside an annotated list
+and save it:</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/S4Vectors/man/List-class.html" class="external-link">List</a></span><span class="op">(</span>thingy<span class="op">=</span><span class="va">mat</span><span class="op">)</span></span>
+<span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/annotateObject.html">annotateObject</a></span><span class="op">(</span><span class="va">obj</span>,</span>
+<span>    title<span class="op">=</span><span class="st">"FOO"</span>,</span>
+<span>    description<span class="op">=</span><span class="st">"I am a list"</span>,</span>
+<span>    maintainers<span class="op">=</span><span class="st">"Aaron Lun &lt;infinite.monkeys.with.keyboards@gmail.com&gt;"</span>,</span>
+<span>    species<span class="op">=</span><span class="fl">9606</span>,</span>
+<span>    genome<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>id<span class="op">=</span><span class="st">"hg38"</span>, source<span class="op">=</span><span class="st">"UCSC"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    origin<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>source<span class="op">=</span><span class="st">"PubMed"</span>, id<span class="op">=</span><span class="st">"123456789"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="va">dir</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/saveObject.html">saveObject</a></span><span class="op">(</span><span class="va">obj</span>, <span class="va">dir</span>, <span class="st">"bar"</span><span class="op">)</span></span></code></pre></div>
+<p>If we were inclined to dig around in the <code>bar</code> directory,
+we would see that the <code>array</code> data in <code>child-1</code>
+doesn’t actually contain any data, but just a link to the existing
+ArtifactDB identifier. This instructs <code><a href="../reference/uploadDirectory.html">uploadDirectory()</a></code> to
+also skip the upload and create a link on the backend.</p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">zircon</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/zircon/man/createPlaceholderLink.html" class="external-link">extractLinkedID</a></span><span class="op">(</span><span class="va">dir</span>, <span class="st">"bar/child-1/array"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] "test:my_first_sce/assay-1/matrix.h5@v1"</span></span></code></pre>
+<p>In this manner, we can save compute time, upload bandwidth and
+storage space when creating new versions of an object. The biggest
+beneficiary of this functionality is the
+<code>SummarizedExperiment</code>, where we can update metadata,
+row/column annotations, etc. at low cost provided that the underlying
+assay data does not change.</p>
+<p>By default, the <code>CalciteArray</code> is created with file-backed
+arrays from the <em><a href="https://bioconductor.org/packages/3.16/HDF5Array" class="external-link">HDF5Array</a></em>
+package. This ensures that it can be easily manipulated in an R session
+with a small memory footprint. However, for analysis steps that actually
+use the array contents, it is best to convert the
+<code>CalciteArray</code> into an in-memory representation to avoid
+repeated disk queries:</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">smat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/methods/as.html" class="external-link">as</a></span><span class="op">(</span><span class="va">mat</span>, <span class="st">"dgCMatrix"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">smat</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Formal class 'dgCMatrix' [package "Matrix"] with 6 slots</span></span>
+<span><span class="co">##   ..@ i       : int [1:11349080] 1 2 4 7 8 12 14 17 19 20 ...</span></span>
+<span><span class="co">##   ..@ p       : int [1:3006] 0 4871 9583 15638 21490 26214 31641 37918 43681 48970 ...</span></span>
+<span><span class="co">##   ..@ Dim     : int [1:2] 20006 3005</span></span>
+<span><span class="co">##   ..@ Dimnames:List of 2</span></span>
+<span><span class="co">##   .. ..$ : chr [1:20006] "Tspan12" "Tshz1" "Fnbp1l" "Adamts15" ...</span></span>
+<span><span class="co">##   .. ..$ : chr [1:3005] "1772071015_C02" "1772071017_G12" "1772071017_A05" "1772071014_B06" ...</span></span>
+<span><span class="co">##   ..@ x       : num [1:11349080] 3 3 1 11 1 1 3 9 5 13 ...</span></span>
+<span><span class="co">##   ..@ factors : list()</span></span></code></pre>
+</div>
+<div class="section level2">
 <h2 id="searching-for-objects">Searching for objects<a class="anchor" aria-label="anchor" href="#searching-for-objects"></a>
 </h2>
 <p>🚧🚧🚧 <strong>Coming soon</strong> 🚧🚧🚧</p>
@@ -247,7 +322,7 @@ can use <code><a href="../reference/uploadDirectory.html">uploadDirectory()</a><
 so all methods in the <em><a href="https://github.com/ArtifactDB/zircon-R" class="external-link">zircon-R</a></em> package
 can be used. For example, we can directly fetch the metadata for
 individual components:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">zircon</span><span class="op">)</span></span>
 <span><span class="va">meta</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/zircon/man/getFileMetadata.html" class="external-link">getFileMetadata</a></span><span class="op">(</span><span class="fu"><a href="../reference/examples.html">exampleID</a></span><span class="op">(</span><span class="op">)</span>, url<span class="op">=</span><span class="fu"><a href="../reference/restURL.html">restURL</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">meta</span><span class="op">$</span><span class="va">data_frame</span><span class="op">)</span></span></code></pre></div>
@@ -275,7 +350,7 @@ individual components:</p>
 <span><span class="co">##  $ row_names : logi FALSE</span></span>
 <span><span class="co">##  $ dimensions: int [1:2] 10 4</span></span></code></pre>
 <p>We can inspect the permissions for a project:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/zircon/man/getPermissions.html" class="external-link">getPermissions</a></span><span class="op">(</span><span class="st">"test"</span>, url<span class="op">=</span><span class="fu"><a href="../reference/restURL.html">restURL</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## $scope</span></span>
 <span><span class="co">## [1] "project"</span></span>
@@ -293,7 +368,7 @@ individual components:</p>
 <span><span class="co">## character(0)</span></span></code></pre>
 <p>And we can pull down all metadata for a particular version of a
 project:</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">v1.meta</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/zircon/man/getProjectMetadata.html" class="external-link">getProjectMetadata</a></span><span class="op">(</span><span class="st">"test"</span>, version<span class="op">=</span><span class="st">"v1"</span>, url<span class="op">=</span><span class="fu"><a href="../reference/restURL.html">restURL</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">v1.meta</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] 17</span></span></code></pre>
@@ -301,7 +376,7 @@ project:</p>
 <div class="section level2">
 <h2 class="unnumbered" id="session-information">Session information<a class="anchor" aria-label="anchor" href="#session-information"></a>
 </h2>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## R version 4.2.1 (2022-06-23)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu (64-bit)</span></span>
@@ -328,28 +403,31 @@ project:</p>
 <span><span class="co">## [4] calcite_0.98.0      BiocStyle_2.25.0   </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
-<span><span class="co">##  [1] tidyselect_1.1.2         xfun_0.33                bslib_0.4.0             </span></span>
-<span><span class="co">##  [4] purrr_0.3.5              rhdf5_2.41.1             V8_4.2.1                </span></span>
-<span><span class="co">##  [7] vctrs_0.4.2              generics_0.1.3           htmltools_0.5.3         </span></span>
-<span><span class="co">## [10] BiocFileCache_2.5.2      yaml_2.3.5               utf8_1.2.2              </span></span>
-<span><span class="co">## [13] blob_1.2.3               rlang_1.0.6              alabaster.base_0.98.0   </span></span>
-<span><span class="co">## [16] pkgdown_2.0.6            jquerylib_0.1.4          pillar_1.8.1            </span></span>
-<span><span class="co">## [19] glue_1.6.2               DBI_1.1.3                rappdirs_0.3.3          </span></span>
-<span><span class="co">## [22] bit64_4.0.5              dbplyr_2.2.1             lifecycle_1.0.2         </span></span>
-<span><span class="co">## [25] stringr_1.4.1            calcite.schemas_0.98.0   ragg_1.2.3              </span></span>
-<span><span class="co">## [28] memoise_2.0.1            evaluate_0.16            knitr_1.40              </span></span>
-<span><span class="co">## [31] fastmap_1.1.0            curl_4.3.3               fansi_1.0.3             </span></span>
-<span><span class="co">## [34] Rcpp_1.0.9               filelock_1.0.2           BiocManager_1.30.18     </span></span>
-<span><span class="co">## [37] jsonvalidate_1.3.2       alabaster.schemas_0.98.0 cachem_1.0.6            </span></span>
-<span><span class="co">## [40] desc_1.4.2               jsonlite_1.8.2           systemfonts_1.0.4       </span></span>
-<span><span class="co">## [43] fs_1.5.2                 bit_4.0.4                textshaping_0.3.6       </span></span>
-<span><span class="co">## [46] digest_0.6.29            stringi_1.7.8            bookdown_0.29           </span></span>
-<span><span class="co">## [49] dplyr_1.0.10             rprojroot_2.0.3          rhdf5filters_1.9.0      </span></span>
-<span><span class="co">## [52] cli_3.4.1                tools_4.2.1              magrittr_2.0.3          </span></span>
-<span><span class="co">## [55] sass_0.4.2               RSQLite_2.2.18           tibble_3.1.8            </span></span>
-<span><span class="co">## [58] pkgconfig_2.0.3          ellipsis_0.3.2           assertthat_0.2.1        </span></span>
-<span><span class="co">## [61] rmarkdown_2.16           httr_1.4.4               Rhdf5lib_1.19.2         </span></span>
-<span><span class="co">## [64] R6_2.5.1                 compiler_4.2.1</span></span></code></pre>
+<span><span class="co">##  [1] Rcpp_1.0.9               lattice_0.20-45          V8_4.2.1                </span></span>
+<span><span class="co">##  [4] assertthat_0.2.1         rprojroot_2.0.3          digest_0.6.29           </span></span>
+<span><span class="co">##  [7] utf8_1.2.2               BiocFileCache_2.5.2      R6_2.5.1                </span></span>
+<span><span class="co">## [10] alabaster.schemas_0.98.0 calcite.schemas_0.98.1   alabaster.matrix_0.98.0 </span></span>
+<span><span class="co">## [13] RSQLite_2.2.18           evaluate_0.16            httr_1.4.4              </span></span>
+<span><span class="co">## [16] pillar_1.8.1             rlang_1.0.6              curl_4.3.3              </span></span>
+<span><span class="co">## [19] jquerylib_0.1.4          blob_1.2.3               Matrix_1.5-1            </span></span>
+<span><span class="co">## [22] rmarkdown_2.17           pkgdown_2.0.6            textshaping_0.3.6       </span></span>
+<span><span class="co">## [25] desc_1.4.2               stringr_1.4.1            bit_4.0.4               </span></span>
+<span><span class="co">## [28] HDF5Array_1.25.2         DelayedArray_0.23.2      compiler_4.2.1          </span></span>
+<span><span class="co">## [31] xfun_0.33                pkgconfig_2.0.3          systemfonts_1.0.4       </span></span>
+<span><span class="co">## [34] htmltools_0.5.3          tidyselect_1.1.2         tibble_3.1.8            </span></span>
+<span><span class="co">## [37] bookdown_0.29            IRanges_2.31.2           matrixStats_0.62.0      </span></span>
+<span><span class="co">## [40] jsonvalidate_1.3.2       fansi_1.0.3              alabaster.base_0.98.0   </span></span>
+<span><span class="co">## [43] dplyr_1.0.10             dbplyr_2.2.1             rhdf5filters_1.9.0      </span></span>
+<span><span class="co">## [46] rappdirs_0.3.3           grid_4.2.1               jsonlite_1.8.2          </span></span>
+<span><span class="co">## [49] lifecycle_1.0.2          DBI_1.1.3                magrittr_2.0.3          </span></span>
+<span><span class="co">## [52] cli_3.4.1                stringi_1.7.8            cachem_1.0.6            </span></span>
+<span><span class="co">## [55] fs_1.5.2                 bslib_0.4.0              ellipsis_0.3.2          </span></span>
+<span><span class="co">## [58] filelock_1.0.2           ragg_1.2.3               generics_0.1.3          </span></span>
+<span><span class="co">## [61] vctrs_0.4.2              Rhdf5lib_1.19.2          tools_4.2.1             </span></span>
+<span><span class="co">## [64] bit64_4.0.5              glue_1.6.2               purrr_0.3.5             </span></span>
+<span><span class="co">## [67] MatrixGenerics_1.9.1     fastmap_1.1.0            yaml_2.3.5              </span></span>
+<span><span class="co">## [70] rhdf5_2.41.1             BiocManager_1.30.18      memoise_2.0.1           </span></span>
+<span><span class="co">## [73] knitr_1.40               sass_0.4.2</span></span></code></pre>
 </div>
   </div>
 
