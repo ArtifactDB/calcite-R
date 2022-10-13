@@ -127,6 +127,54 @@ uploadDirectory(staging,
     expires=1)
 ```
 
+# `DelayedArray` wrappers for calcite
+
+For arrays, `r self` offers some special behavior during loading:
+
+```{r}
+mat <- fetchObject("test:my_first_sce/assay-1/matrix.h5@v1")
+mat
+```
+
+The `CalciteArray` object is a [`DelayedArray`](https://bioconductor.org/packages/DelayedArray) subclass that remembers its ArtifactDB identifier.
+This provides some optimization opportunities during the save/upload of the unmodified array.
+For example, let's wrap `mat` inside an annotated list and save it:
+
+```{r}
+obj <- List(thingy=mat)
+obj <- annotateObject(obj,
+    title="FOO",
+    description="I am a list",
+    maintainers="Aaron Lun <infinite.monkeys.with.keyboards@gmail.com>",
+    species=9606,
+    genome=list(list(id="hg38", source="UCSC")),
+    origin=list(list(source="PubMed", id="123456789"))
+)
+
+dir <- tempfile()
+dir.create(dir)
+saveObject(obj, dir, "bar")
+```
+
+If we were inclined to dig around in the `bar` directory, we would see that the `array` data in `child-1` doesn't actually contain any data, but just a link to the existing ArtifactDB identifier.
+This instructs `uploadDirectory()` to also skip the upload and create a link on the backend.
+
+```{r}
+zircon::extractLinkedID(dir, "bar/child-1/array")
+```
+
+In this manner, we can save compute time, upload bandwidth and storage space when creating new versions of an object.
+The biggest beneficiary of this functionality is the `SummarizedExperiment`, where we can update metadata, row/column annotations, etc. at low cost provided that the underlying assay data does not change.
+
+By default, the `CalciteArray` is created with file-backed arrays from the `r Biocpkg("HDF5Array")` package.
+This ensures that it can be easily manipulated in an R session with a small memory footprint.
+However, for analysis steps that actually use the array contents, it is best to convert the `CalciteArray` into an in-memory representation to avoid repeated disk queries:
+
+```{r}
+smat <- as(mat, "dgCMatrix")
+str(smat)
+```
+
 # Searching for objects
 
 🚧🚧🚧 **Coming soon** 🚧🚧🚧

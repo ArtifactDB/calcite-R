@@ -11,7 +11,7 @@
 #'
 #' Alternatively, a \linkS4class{BiocFileCache} object.
 #' @param force.update Logical scalar indicating whether cache entries should be forcibly updated.
-#' Useful for fixing corrupted or incomplete files in the cache.
+#' Useful for fixing corrupted or incomplete files in the cache.#'
 #'
 #' @return
 #' An R object corresponding to \code{id}.
@@ -38,14 +38,27 @@
 #' @export
 #' @importFrom alabaster.base acquireMetadata .altLoadObject
 #' @importFrom zircon unpackID
-#' @importFrom BiocFileCache BiocFileCache
 fetchObject <- function(id, cache=TRUE, force.update=FALSE) {
+    cfun <- .configure_cache(cache, force.update=force.update)
+    on.exit(cfun(), add=TRUE)
+
+    ifun <- .setup_github_identities()
+    on.exit(ifun(), add=TRUE)
+
+    oldl <- .altLoadObject(calciteLoadObject)
+    on.exit(.altLoadObject(oldl), add=TRUE)
+
+    unpacked <- unpackID(id)
+    proj <- new("CalciteHandler", project=unpacked$project, version=unpacked$version)
+    meta <- acquireMetadata(proj, unpacked$path)
+
+    calciteLoadObject(meta, proj)
+}
+
+#' @importFrom BiocFileCache BiocFileCache
+.configure_cache <- function(cache=TRUE, force.update=FALSE) {
     oldc <- globals$cache.object
     oldu <- globals$cache.update
-    on.exit({ 
-        globals$cache.object <- oldc
-        globals$cache.update <- oldu
-    }, add=TRUE)
 
     if (isFALSE(cache)) {
         globals$cache.object <- NULL
@@ -63,26 +76,19 @@ fetchObject <- function(id, cache=TRUE, force.update=FALSE) {
     }
     globals$cache.update <- force.update
 
-    fun <- .setup_github_identities()
-    on.exit(fun(), add=TRUE)
-
-    oldl <- .altLoadObject(calciteLoadObject)
-    on.exit(.altLoadObject(oldl), add=TRUE)
-
-    unpacked <- unpackID(id)
-    proj <- new("CalciteHandler", project=unpacked$project, version=unpacked$version)
-    meta <- acquireMetadata(proj, unpacked$path)
-
-    calciteLoadObject(meta, proj)
+    invisible(function() {
+        globals$cache.object <- oldc
+        globals$cache.update <- oldu
+    })
 }
 
-memory <- new.env()
-memory$cache <- list()
+schema.memory <- new.env()
+schema.memory$cache <- list()
 
 #' @import calcite.schemas
 #' @importFrom alabaster.base .loadObjectInternal
 calciteLoadObject <- function(info, project, ...) {
-    obj <- .loadObjectInternal(info, project, ..., .locations="calcite.schemas", .memory=memory)
+    obj <- .loadObjectInternal(info, project, ..., .locations="calcite.schemas", .memory=schema.memory)
 
     if (is(obj, "Annotated")) {
         blessed <- c(

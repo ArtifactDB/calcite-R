@@ -70,3 +70,23 @@ setMethod("calciteStageObject", "Annotated", function(x, dir, path, child=FALSE,
     callNextMethod()
 })
 
+#' @importFrom DelayedArray seed
+#' @importFrom alabaster.base acquireMetadata
+#' @importFrom zircon unpackID createPlaceholderLink
+setMethod("calciteStageObject", "CalciteArray", function(x, dir, path, child=FALSE, ...) {
+    s <- seed(x)
+    id <- s@id
+    unpack <- unpackID(id)
+
+    dir.create(file.path(dir, path))
+    final <- file.path(path, "array")
+    createPlaceholderLink(dir, final, id)
+
+    proj <- new("CalciteHandler", project=unpack$project, version=unpack$version)
+    info <- acquireMetadata(proj, unpack$path)
+    info$path <- final
+    info$is_child <- child
+    info[["_extra"]] <- NULL
+
+    info
+})

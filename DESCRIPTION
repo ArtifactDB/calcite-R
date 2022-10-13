@@ -9,6 +9,7 @@ Authors@R: person("Aaron", "Lun", role=c("aut", "cre"), email="infinite.monkeys.
 License: MIT + file LICENSE
 Imports:
     alabaster.base,
+    alabaster.matrix,
     calcite.schemas,
     zircon,
     filelock,
@@ -17,7 +18,8 @@ Imports:
     BiocFileCache,
     tools,
     stats,
-    S4Vectors
+    S4Vectors,
+    DelayedArray
 Suggests:
     knitr,
     rmarkdown,

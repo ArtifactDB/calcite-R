@@ -17,7 +17,7 @@ Alternatively, a string specifying the path to a cache directory.
 Alternatively, a \linkS4class{BiocFileCache} object.}
 
 \item{force.update}{Logical scalar indicating whether cache entries should be forcibly updated.
-Useful for fixing corrupted or incomplete files in the cache.}
+Useful for fixing corrupted or incomplete files in the cache.#'}
 }
 \value{
 An R object corresponding to \code{id}.
