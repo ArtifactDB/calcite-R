@@ -71,7 +71,7 @@ CalciteArraySeed <- function(id) {
 
     proj <- new("CalciteHandler", project=unpacked$project, version=unpacked$version)
     info <- acquireMetadata(proj, unpacked$path)
-    seed <- .createRawArraySeed(info, acquireFile(proj, unpacked$path))
+    seed <- .createRawArraySeed(info, proj)
 
     new("CalciteArraySeed", id=id, seed=seed)
 }

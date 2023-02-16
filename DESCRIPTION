@@ -1,6 +1,6 @@
 Package: calcite
-Version: 0.98.0
-Date: 2022-09-30
+Version: 0.98.1
+Date: 2023-02-15
 Title: ExperimentHub-like Demonstrator for ArtifactDB
 Description: 
     Provides an interface to calcite, the ExperimentHub-like instance of ArtifactDB.
